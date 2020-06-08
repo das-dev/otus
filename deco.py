@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from functools import update_wrapper
+import functools
 
 
-def disable():
+def disable(func):
     '''
     Disable a decorator by re-assigning the decorator's name
     to this function. For example, to turn off memoization:
@@ -12,46 +12,70 @@ def disable():
     >>> memo = disable
 
     '''
-    return
+
+    return func
 
 
-def decorator():
+def decorator(func):
     '''
     Decorate a decorator so that it inherits the docstrings
     and stuff from the function it's decorating.
     '''
-    return
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
 
 
-def countcalls():
+def countcalls(func):
     '''Decorator that counts calls made to the function decorated.'''
-    return
+
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        return func(*args, **kwargs)
+    wrapper.calls = 0
+    return wrapper
 
 
-def memo():
+def memo(func):
     '''
     Memoize a function so that it caches all return values for
     faster future lookups.
     '''
-    return
+    
+    cache = {}
+
+    def wrapper(*args, **kwargs):
+        key = hash(args + tuple(kwargs.items()))
+        if key not in cache:
+            cache[key] = func(*args, **kwargs)
+        return cache[key]
+
+    functools.update_wrapper(wrapper, func)
+    return wrapper
 
 
-def n_ary():
+def n_ary(func):
     '''
     Given binary function f(x, y), return an n_ary function such
     that f(x, y, z) = f(x, f(y,z)), etc. Also allow f(x) = x.
     '''
-    return
+
+    def wrapper(*args):
+        if len(args) > 2:
+            return func(args[0], wrapper(*args[1:]))
+        return func(*args)
+    return wrapper
 
 
-def trace():
+def trace(tab='----'):
     '''Trace calls made to function decorated.
 
     @trace("____")
     def fib(n):
         ....
 
-    >>> fib(3)
      --> fib(3)
     ____ --> fib(2)
     ________ --> fib(1)
@@ -64,7 +88,21 @@ def trace():
      <-- fib(3) == 3
 
     '''
-    return
+
+    def deco(func):
+        def wrapper(*args, **kwargs):
+            arg_str = ', '.join(map(str, args))
+            ctx = {'tab': tab * context['count'], 'name': func.__name__, 'arg_str': arg_str}
+            print('{tab} --> {name}({arg_str})'.format(**ctx))
+            context['count'] += 1
+            ctx['result'] = func(*args, **kwargs)
+            print('{tab} <-- {name}({arg_str}) == {result}'.format(**ctx))
+            context['count'] -= 1
+            return ctx['result']
+
+        context = {'count': 0}
+        return wrapper
+    return deco
 
 
 @memo
