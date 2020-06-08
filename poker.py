@@ -26,6 +26,14 @@
 # Вам наверняка пригодится itertools.
 # Можно свободно определять свои функции и т.п.
 # -----------------
+import itertools
+from collections import Counter
+
+
+RANKS = dict(zip('23456789TJQKA', range(2, 15)))
+RANK_SIDE = 0
+SUIT_SIDE = 1
+HAND_SIZE = 5
 
 
 def hand_rank(hand):
@@ -54,39 +62,56 @@ def hand_rank(hand):
 def card_ranks(hand):
     """Возвращает список рангов (его числовой эквивалент),
     отсортированный от большего к меньшему"""
-    return
+
+    return sorted(RANKS[card[RANK_SIDE]] for card in hand)
 
 
 def flush(hand):
     """Возвращает True, если все карты одной масти"""
-    return
+
+    return len(set(card[SUIT_SIDE] for card in hand)) == 1
 
 
 def straight(ranks):
     """Возвращает True, если отсортированные ранги формируют последовательность 5ти,
     где у 5ти карт ранги идут по порядку (стрит)"""
-    return
+
+    return ranks == range(ranks[0], ranks[-1])
 
 
 def kind(n, ranks):
     """Возвращает первый ранг, который n раз встречается в данной руке.
     Возвращает None, если ничего не найдено"""
-    return
+
+    counts = Counter(ranks)
+    for rank in ranks:
+        if counts[rank] == n:
+            return rank
 
 
 def two_pair(ranks):
     """Если есть две пары, то возврщает два соответствующих ранга,
     иначе возвращает None"""
-    return
+
+    uniq_ranks = set(ranks)
+    if len(uniq_ranks) == 3:
+        not_pair = kind(1, ranks)
+        return [rank for rank in uniq_ranks if rank != not_pair]
 
 
 def best_hand(hand):
     """Из "руки" в 7 карт возвращает лучшую "руку" в 5 карт """
-    return
+
+    best = None
+    for version in itertools.permutations(hand, 5):
+        if not best or hand_rank(version) > hand_rank(best):
+            best = version
+    return best
 
 
 def best_wild_hand(hand):
     """best_hand но с джокерами"""
+
     return
 
 
@@ -111,6 +136,7 @@ def test_best_wild_hand():
             == ['7C', '7D', '7H', '7S', 'JD'])
     print 'OK'
 
+
 if __name__ == '__main__':
     test_best_hand()
-    test_best_wild_hand()
+    # test_best_wild_hand()
