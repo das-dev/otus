@@ -31,9 +31,14 @@ from collections import Counter
 
 
 RANKS = dict(zip('23456789TJQKA', range(2, 15)))
+RED_CARDS = [''.join([rank, suite]) for rank in RANKS for suite in 'HD']
+BLACK_CARDS = [''.join([rank, suite]) for rank in RANKS for suite in 'SC']
+RED_JOKER = '?R'
+BLACK_JOKER = '?B'
 RANK_SIDE = 0
 SUIT_SIDE = 1
 HAND_SIZE = 5
+
 
 
 def hand_rank(hand):
@@ -112,7 +117,24 @@ def best_hand(hand):
 def best_wild_hand(hand):
     """best_hand но с джокерами"""
 
-    return
+    jokers = RED_JOKER, BLACK_JOKER
+    jokers_on_hand = [card for card in hand if card in jokers]
+    hands = []
+    red_cards = RED_CARDS if RED_JOKER in jokers_on_hand else [None]
+    black_cards = BLACK_CARDS if BLACK_JOKER in jokers_on_hand else [None]
+    cards = [card for card in hand if card not in jokers]
+    for red_card in red_cards:
+        for black_card in black_cards:
+            extra_hand = filter(bool, [red_card, black_card]) + cards
+            hands.append(extra_hand)
+
+    best = None
+    for hand in hands:
+        for version in itertools.permutations(hand, HAND_SIZE):
+            print version, hand_rank(version)
+            if not best or hand_rank(version) > hand_rank(best):
+                best = version
+    return best
 
 
 def test_best_hand():
@@ -128,6 +150,7 @@ def test_best_hand():
 
 def test_best_wild_hand():
     print "test_best_wild_hand..."
+    print (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split())))
     assert (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split()))
             == ['7C', '8C', '9C', 'JC', 'TC'])
     assert (sorted(best_wild_hand("TD TC 5H 5C 7C ?R ?B".split()))
@@ -139,4 +162,4 @@ def test_best_wild_hand():
 
 if __name__ == '__main__':
     test_best_hand()
-    # test_best_wild_hand()
+    test_best_wild_hand()
