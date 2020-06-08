@@ -94,7 +94,7 @@ def two_pair(ranks):
     иначе возвращает None"""
 
     uniq_ranks = set(ranks)
-    if len(uniq_ranks) == 3:
+    if len(uniq_ranks) == HAND_SIZE - 2:
         not_pair = kind(1, ranks)
         return [rank for rank in uniq_ranks if rank != not_pair]
 
@@ -103,7 +103,7 @@ def best_hand(hand):
     """Из "руки" в 7 карт возвращает лучшую "руку" в 5 карт """
 
     best = None
-    for version in itertools.permutations(hand, 5):
+    for version in itertools.permutations(hand, HAND_SIZE):
         if not best or hand_rank(version) > hand_rank(best):
             best = version
     return best
